@@ -1,0 +1,159 @@
+{
+    "modName": "LivingIsPain~UI",
+    "displayName": "LiP UI",
+    "minMcmVersion": 2,
+    "pluginRequirements": [ "LiPUI.esl" ],
+    "content": [
+        {
+            "text": "Configuration parameters for LiP UI",
+            "type": "text"
+        }
+    ],
+    "pages": [
+        {
+            "pageDisplayName": "Player widget",
+            "content":[
+                {
+                    "id": "bShowPlayerWidget:Default",
+                    "text": "Show Player widget",
+                    "type": "switcher",
+                    "help": "",
+                    "valueOptions": {
+                        "sourceType": "ModSettingInt"
+                    }
+                },
+                {
+                    "id": "iPositionX:Default",
+                    "text": "X",
+                    "type": "slider",
+                    "help": "",
+                    "valueOptions": {
+                        "min": 0,
+                        "max": 799,
+                        "step": 1,
+                        "sourceType": "ModSettingInt"
+                    }
+                },
+                {
+                    "id": "iPositionY:Default",
+                    "text": "Y",
+                    "type": "slider",
+                    "help": "",
+                    "valueOptions": {
+                        "min": 0,
+                        "max": 599,
+                        "step": 1,
+                        "sourceType": "ModSettingInt"
+                    }
+                },
+                {
+                    "id": "iFontSize:Default",
+                    "text": "Font size",
+                    "type": "slider",
+                    "help": "",
+                    "valueOptions": {
+                        "min": 5,
+                        "max": 20,
+                        "step": 1,
+                        "sourceType": "ModSettingInt"
+                    }
+                }
+                
+            ]
+        },
+        {
+            "pageDisplayName": "NPC widgets",
+            "content":[
+                {
+                    "id": "bShowNPCWidgets:Default",
+                    "text": "Show NPC widgets",
+                    "type": "switcher",
+                    "help": "Enable/Disable NPC widgets displaying during AAF scenes",
+                    "valueOptions": {
+                        "sourceType": "ModSettingInt"
+                    }
+                },
+                {
+                    "id": "iMaxDistance:Default",
+                    "text": "Maximum display distance",
+                    "type": "slider",
+                    "help": "",
+                    "valueOptions": {
+                        "min": 150,
+                        "max": 1500,
+                        "step": 50,
+                        "sourceType": "ModSettingInt"
+                    }
+                }
+            ]
+        },
+        {
+            "pageDisplayName": "Color coding",
+            "content": [
+                {
+                    "id": "sNormalColor:Default",
+                    "text": "Normal color",
+                    "type": "textinput",
+                    "help": "0x00RRGGBB",
+                    "valueOptions": {
+                        "sourceType": "ModSettingString"
+                    }
+                },
+                {
+                    "id": "sModeratePositiveColor:Default",
+                    "text": "Moderate Positive color",
+                    "type": "textinput",
+                    "help": "0x00RRGGBB",
+                    "valueOptions": {
+                        "sourceType": "ModSettingString"
+                    }
+                },
+                {
+                    "id": "sHighPositiveColor:Default",
+                    "text": "High Positive color",
+                    "type": "textinput",
+                    "help": "0x00RRGGBB",
+                    "valueOptions": {
+                        "sourceType": "ModSettingString"
+                    }
+                },
+                {
+                    "id": "sMaxPositiveColor:Default",
+                    "text": "Max Positive color",
+                    "type": "textinput",
+                    "help": "0x00RRGGBB",
+                    "valueOptions": {
+                        "sourceType": "ModSettingString"
+                    }
+                },
+                {
+                    "id": "sModerateNegativeColor:Default",
+                    "text": "Moderate Negative color",
+                    "type": "textinput",
+                    "help": "0x00RRGGBB",
+                    "valueOptions": {
+                        "sourceType": "ModSettingString"
+                    }
+                },
+                {
+                    "id": "sHighNegativeColor:Default",
+                    "text": "HighNegative color",
+                    "type": "textinput",
+                    "help": "0x00RRGGBB",
+                    "valueOptions": {
+                        "sourceType": "ModSettingString"
+                    }
+                },
+                {
+                    "id": "sMaxNegativeColor:Default",
+                    "text": "MaxNegative color",
+                    "type": "textinput",
+                    "help": "0x00RRGGBB",
+                    "valueOptions": {
+                        "sourceType": "ModSettingString"
+                    }
+                }
+            ]
+        }
+    ]
+}
