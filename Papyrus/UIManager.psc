@@ -392,13 +392,13 @@ Endevent
 
 
 Function OnIncreased(Form[] senders, Actor a, ActorValue attribute, float newValue, float previousValue, float exceed)
-    if exceed > 0 || (newValue as int != previousValue as int)
+    if exceed > 0 || (newValue as int != previousValue as int) || MyAttributes[FailedOrgasms] == attribute
         LiP:UI.ChangeValue(a, attribute, newValue)
     endif
 EndFunction
 
 Function OnDecreased(Form[] senders, Actor a, ActorValue attribute, float newValue, float previousValue, float exceed)
-    if exceed > 0 || (newValue as int != previousValue as int)
+    if exceed > 0 || (newValue as int != previousValue as int) || MyAttributes[FailedOrgasms] == attribute
         LiP:UI.ChangeValue(a, attribute, newValue)
     endif
 EndFunction
