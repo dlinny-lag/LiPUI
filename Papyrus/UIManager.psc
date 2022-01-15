@@ -85,7 +85,6 @@ Endevent
 
 int showPlayerWidgetTimer = 10 const
 int showWarningTimer = 11 const
-int uninstallOldVersionTimer = 12 const
 
 
 event OnTimer(int timerId)
@@ -97,8 +96,6 @@ event OnTimer(int timerId)
         if !CheckOldVersion()
             StartTimer(1, showWarningTimer)
         endif
-    elseif uninstallOldVersionTimer == timerId
-        UninstallOldHUD()
     endif
 endevent
 
@@ -108,34 +105,22 @@ bool function CheckOldVersion()
         if MQ101.GetStage() < 15
             return false
         endif
-        Debug.MessageBox("LiP UI\nIt is highly recommended to uninstall LiPHUDAddon.esl")
+        Debug.MessageBox("LiP UI\nIt is highly recommended to uninstall 'LiP HUD Addon'")
+    endif
+    int aa = AA:Plugin.GetVersionInt()
+    if aa < 0x0081
+        Quest MQ101 = Game.GetFormFromFile(0x0001ED86, "Fallout4.esm") as Quest
+        if MQ101.GetStage() < 15
+            return false
+        endif
+        Debug.MessageBox("LiP UI\nAdditional Attributes 0.8.1 or higher is required")
     endif
     return true
 endfunction
 
-function UninstallOldVersion()
-    StartTimer(0.1, uninstallOldVersionTimer)
-endfunction
-
-string oldHUDWidget = "LiPMain.swf"
-Function UninstallOldHUD()
-    HUDFramework hud = HUDFramework.GetInstance()
-    if !hud
-        return ; nothing to uninstall
-    endif
-
-    hud.UnloadWidget(oldHUDWidget)
-    Utility.Wait(1)
-    hud.UnregisterWidget(oldHUDWidget)
-    Utility.Wait(1)
-    Game.RequestSave()
-EndFunction
-
 function ShowPlayerWidget()
     LiP:UI.EnableWidget(player, player.GetDisplayName())
     LiP:UI.SetPlayerWidgetPosition(PlayerWidgetX, PlayerWidgetY)
-    float[] values = AA:AV.GetValues(player, MyAttributes, 0)
-    LiP:UI.SetValues(player, values)
 endfunction
 Function HidePlayerWidget()
     LiP:UI.DisableWidget(player)
@@ -177,6 +162,7 @@ endfunction
 
 function EnsureSubscribed()
     DS:FormSet.Clear(TrackedActors)
+    AA:AVChanges.UnregisterForAttributesChanges(self) ; could be registered by previous version
 
     ; init UI
     if LoadSettingFromMCM()
@@ -190,11 +176,9 @@ function EnsureSubscribed()
     LiP:UI.SetFontSize(FontSize)
     LiP:UI.SetMaxDistance(MaxDistance)
 
-    AA:AVChanges.UnregisterForAttributesChanges(self)
     Actor[] actors = new Actor[1]
     actors[0] = player
     DS:FormSet.Add(TrackedActors, player)
-    AA:AVChanges.RegisterForAttributesChanges(self, actors, MyAttributes)
 
     StartTimer(0.1, showPlayerWidgetTimer)
     StartTimer(1, showWarningTimer)
@@ -337,11 +321,7 @@ endfunction
 ; for debug purposes only
 function TrackNPC(Actor a)
     if a && a != player
-        if !DS:FormSet.Contains(TrackedActors, a)
-            DS:FormSet.Add(TrackedActors, a)
-            AA:AVChanges.UnregisterForAttributesChanges(self)
-            AA:AVChanges.RegisterForAttributesChanges(self, DS:FormSet.ToArray(TrackedActors) as Actor[], MyAttributes)
-        endif
+        DS:FormSet.Add(TrackedActors, a)
         ShowNPCWidget(a)
     endif
 endfunction
@@ -349,8 +329,6 @@ endfunction
 function ShowNPCWidget(Actor a)
     if a && a != player
         LiP:UI.EnableWidget(a, a.GetDisplayName())
-        float[] values = AA:AV.GetValues(a, MyAttributes, 0)
-        LiP:UI.SetValues(a, values)
     endif
 endfunction
 
@@ -358,8 +336,6 @@ Event AAF:AAF_API.OnAnimationStart(AAF:AAF_API sender, var[] args)
     if AllowNPCWidgets && args[0] as int == 0
         Form[] actors = Utility.VarToVarArray(args[1]) as Form[]
         DS:FormSet.AddRange(TrackedActors, actors)
-        AA:AVChanges.UnregisterForAttributesChanges(self)
-        AA:AVChanges.RegisterForAttributesChanges(self, DS:FormSet.ToArray(TrackedActors) as Actor[], MyAttributes)
         int i = 0
         while i < actors.Length
             Actor a = actors[i] as Actor
@@ -374,8 +350,6 @@ Endevent
 function UntrackAllNPCs(Form[] actors)
     DS:FormSet.RemoveRange(TrackedActors, actors)
     DS:FormSet.Add(TrackedActors, player) ; don't remove player. yes, overhead, but simplification
-    AA:AVChanges.UnregisterForAttributesChanges(self)
-    AA:AVChanges.RegisterForAttributesChanges(self, DS:FormSet.ToArray(TrackedActors) as Actor[], MyAttributes)
     int i = 0
     while i < actors.Length
         Actor a = actors[i] as Actor
@@ -385,20 +359,8 @@ function UntrackAllNPCs(Form[] actors)
         i += 1
     endwhile
 endfunction
+
 Event AAF:AAF_API.OnAnimationStop(AAF:AAF_API sender, var[] args)
     Form[] actors = Utility.VarToVarArray(args[1]) as Form[]
     UntrackAllNPCs(actors)
 Endevent
-
-
-Function OnIncreased(Form[] senders, Actor a, ActorValue attribute, float newValue, float previousValue, float exceed)
-    if exceed > 0 || (newValue as int != previousValue as int) || MyAttributes[FailedOrgasms] == attribute
-        LiP:UI.ChangeValue(a, attribute, newValue)
-    endif
-EndFunction
-
-Function OnDecreased(Form[] senders, Actor a, ActorValue attribute, float newValue, float previousValue, float exceed)
-    if exceed > 0 || (newValue as int != previousValue as int) || MyAttributes[FailedOrgasms] == attribute
-        LiP:UI.ChangeValue(a, attribute, newValue)
-    endif
-EndFunction

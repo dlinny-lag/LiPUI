@@ -117,9 +117,7 @@ struct RemoveWidgetRequest : WidgetRequest
 };
 struct SetAllValuesRequest : WidgetRequest
 {
-	std::vector<float> Values;
-
-	SetAllValuesRequest(UInt32 actorId, std::vector<float> values) : WidgetRequest(actorId), Values(std::move(values))
+	SetAllValuesRequest(UInt32 actorId) : WidgetRequest(actorId)
 	{
 	}
 	bool Proceed(RequestsContext* context, GFxValue& stage, bool updateContextOnly) const override
@@ -132,23 +130,18 @@ struct SetAllValuesRequest : WidgetRequest
 		}
 		if (updateContextOnly)
 		{ // just update state without UI updating
-			ptr->second.Values = Values;
 			return true;
 		}
 		GFxValue args[4];
 		args[0].SetUInt(ActorId);
-		if (ptr->second.Values.empty())
-		{
-			const UInt32 len = Attributes::Length();
-			ptr->second.Values.reserve(len);
-			for(UInt32 i = 0; i < len; ++i)
-				ptr->second.Values.emplace_back(0);
-		}
-		for(UInt32 i = 0; i < Values.size(); i++)
+
+		const auto values = Attributes::GetValues(DYNAMIC_CAST(LookupFormByID(ActorId), TESForm, Actor));
+
+		for(UInt32 i = 0; i < values.size(); i++)
 		{
 			char value[Attributes::StringLength];
 			UInt32 color;
-			if (!Attributes::PrintIndex(i, Values[i], value, color))
+			if (!Attributes::PrintIndex(i, values[i], value, color))
 			{
 				_MESSAGE("Failed to generate value string");
 				continue;
@@ -163,7 +156,6 @@ struct SetAllValuesRequest : WidgetRequest
 				const bool retVal = ret.GetBool();
 				if (retVal)
 				{
-					ptr->second.Values[i] = Values[i];
 					ptr->second.Visible = true; // same as in AS3
 				}
 				else
@@ -217,7 +209,6 @@ struct ChangeValueRequest : WidgetRequest
 		}
 		if (updateContextOnly)
 		{ // just update state without UI updating
-			ptr->second.Values[index] = Value;
 			return true;
 		}
 
@@ -243,7 +234,6 @@ struct ChangeValueRequest : WidgetRequest
 			const bool retVal = ret.GetBool();
 			if (retVal)
 			{
-				ptr->second.Values[index] = Value;
 				ptr->second.Visible = true;  // same as in AS3
 				CreateOrReplaceAnimation(ActorId, index, 100, 5);
 			}
@@ -383,11 +373,9 @@ LiPUIMenu::~LiPUIMenu()
 void LiPUIMenu::CreateWidget(UInt32 actorId, const std::string& name, bool autoPosition)
 {
 	processor.Add(new CreateWidgetRequest(actorId, name, autoPosition));
+	processor.Add(new SetAllValuesRequest(actorId));
 }
-void LiPUIMenu::SetValues(UInt32 actorId, const std::vector<float>& values)
-{
-	processor.Add(new SetAllValuesRequest(actorId, values));
-}
+
 void LiPUIMenu::RemoveWidget(UInt32 actorId)
 {
 	processor.Add(new RemoveWidgetRequest(actorId));
@@ -397,9 +385,22 @@ void LiPUIMenu::SetFontSize(float size)
 	processor.Add(new FontSizeRequest(size));
 	_MESSAGE("called SetFontSize %f", size);
 }
-void LiPUIMenu::ChangeValue(UInt32 actorId, UInt32 attributeId, float value)
+void LiPUIMenu::ProcessChangeNotification(UInt32 actorId, UInt32 attributeId, float prevVal, float newVal, float exceed)
 {
-	processor.Add(new ChangeValueRequest(actorId, attributeId, value));
+	if (rc.RegisteredWidgets.find(actorId) == rc.RegisteredWidgets.end())
+		return;
+	const AttributeType type = Attributes::GetAttributeType(attributeId);
+	switch(type)
+	{
+		case AttributeType::Wrong:
+			return;
+		case AttributeType::Float:
+			processor.Add(new ChangeValueRequest(actorId, attributeId, newVal));
+			return;
+		case AttributeType::Integer:
+			if ((SInt32)prevVal != (SInt32)newVal || exceed > 0)
+				processor.Add(new ChangeValueRequest(actorId, attributeId, newVal));
+	}
 }
 void LiPUIMenu::SetWidgetPosition(UInt32 actorId, SInt32 x, SInt32 y)
 {
@@ -449,7 +450,6 @@ void UpdateFromState()
 	{
 		LiPUIMenu::CreateWidget(pair.first, pair.second.Name, pair.second.AutoPosition);
 		LiPUIMenu::SetWidgetPosition(pair.first, pair.second.Screen.X, pair.second.Screen.Y);
-		LiPUIMenu::SetValues(pair.first, pair.second.Values);
 	}
 	_MESSAGE("Update of %d widgets is scheduled", rc.RegisteredWidgets.size());
 	rc.RegisteredWidgets.clear();

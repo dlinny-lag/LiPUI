@@ -9,6 +9,7 @@
 #include "MenuOpenCloseHandler.h"
 #include "UIColorCoding.hpp"
 #include "StringAPI.hpp"
+#include "AA/Change.hpp"
 
 #define REQUIRED_RUNTIME RUNTIME_VERSION_1_10_163
 
@@ -33,20 +34,35 @@ bool RegisterExportingFunctions(VirtualMachine* vm)
 
 void Serialization_Revert(const F4SESerializationInterface* intfc)
 {
-	_MESSAGE("Revert");
-	
+
 }
 void Serialization_Save(const F4SESerializationInterface* intfc)
 {
-	_MESSAGE("Game Saving...");
-
-	_MESSAGE("Game Saved");
 }
 void Serialization_Load(const F4SESerializationInterface* intfc)
 {
-	_MESSAGE("Game Loading...");
+}
 
-	_MESSAGE("Game Loaded");
+void OnAttributeChanged(F4SEMessagingInterface::Message* msg)
+{
+	if (msg->type == Notifications::AttributeIncrementMessageType || msg->type == Notifications::AttributeDecrementMessageType)
+	{
+		ASSERT(sizeof(Notifications::Change) == msg->dataLen);
+		const Notifications::Change* change = static_cast<Notifications::Change*>(msg->data);
+		if (!change->Attribute)
+		{
+			_MESSAGE("None attribute");
+			return;
+		}
+		if (!change->Actor)
+		{
+			_MESSAGE("None actor");
+			return;
+		}
+		LiPUIMenu::ProcessChangeNotification(change->Actor->formID, change->Attribute->formID, change->PreviousValue, change->NewValue, change->Exceed);
+	}
+	else
+		_MESSAGE("Invalid message type %d", msg->type);
 }
 
 void MessageCallback(F4SEMessagingInterface::Message* msg)
@@ -62,7 +78,20 @@ void MessageCallback(F4SEMessagingInterface::Message* msg)
 		
 		MenuOpenCloseHandler::RegisterHandler();
 	}
+	else if(msg->type == F4SEMessagingInterface::kMessage_PostLoad)
+	{
+		if (!Notifications::SubscribeForChanges(g_messaging, g_pluginHandle, OnAttributeChanged))
+		{
+			_MESSAGE("Failed to subscribe to AA notifications");
+		}
+		else
+		{
+			_MESSAGE("Successfully subscribed for AA notifications");
+		}
+	}
 }
+
+
 extern "C"
 {
 	bool F4SEPlugin_Query(const F4SEInterface * f4se, PluginInfo * info)
@@ -130,7 +159,8 @@ extern "C"
 
 		g_papyrus->Register(RegisterExportingFunctions);
 		g_scaleform->Register(LiPUIMenu::MenuName, LiPUIMenu::RegisterScaleform);
-		g_messaging->RegisterListener(g_pluginHandle, "F4SE", MessageCallback); 
+		g_messaging->RegisterListener(g_pluginHandle, "F4SE", MessageCallback);
+
 		_MESSAGE("F4SEPlugin_Load successful.");
 		return true;
 	}

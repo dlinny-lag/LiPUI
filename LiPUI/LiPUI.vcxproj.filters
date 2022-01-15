@@ -228,6 +228,9 @@
     </ClInclude>
     <ClInclude Include="Requests.hpp" />
     <ClInclude Include="RequestsContext.h" />
+    <ClInclude Include="..\AA\Change.hpp">
+      <Filter>AA</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VersionInfo.rc" />
@@ -241,6 +244,9 @@
   <ItemGroup>
     <Filter Include="F4SE">
       <UniqueIdentifier>{5914fe4e-6231-48c3-bed9-5d119fd1673c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AA">
+      <UniqueIdentifier>{7637c704-3bc4-4126-8c28-f3a2931a6446}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -30,10 +30,9 @@ public:
 	LiPUIMenu& operator=(LiPUIMenu&&) = delete;
 
 	static void CreateWidget(UInt32 actorId, const std::string& name, bool autoPosition);
-	static void SetValues(UInt32 actorId, const std::vector<float>& values);
 	static void RemoveWidget(UInt32 actorId);
 	static void SetFontSize(float size);
-	static void ChangeValue(UInt32 actorId, UInt32 attributeId, float value);
+	static void ProcessChangeNotification(UInt32 actorId, UInt32 attributeId, float prevVal, float newVal, float exceed);
 	static void SetWidgetPosition(UInt32 actorId, SInt32 x, SInt32 y);
 	static void ClearState();
 	static void SetDistance(UInt32 distance);

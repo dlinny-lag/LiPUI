@@ -1,6 +1,7 @@
 #include "Attributes.h"
-
+#include "f4se/GameReferences.h"
 #include "ColorCoding.h"
+#include "f4se/GameRTTI.h"
 
 class IntValue final : public PrintableValue
 {
@@ -17,6 +18,10 @@ public:
 		snprintf(output, 4, "%3ld", val);
 		return true;
 	}
+	AttributeType GetType() const override
+	{
+		return AttributeType::Integer;
+	}
 };
 class FloatValue final: public PrintableValue
 {
@@ -29,6 +34,10 @@ public:
 	{
 		snprintf(output, Attributes::StringLength, "%.3f", value);
 		return true;
+	}
+	AttributeType GetType() const override
+	{
+		return AttributeType::Float;
 	}
 };
 
@@ -46,6 +55,15 @@ UInt32 Attributes::Length()
 {
 	BSWriteLocker lock(&lockObject);
 	return cache.size();
+}
+
+AttributeType Attributes::GetAttributeType(UInt32 attributeId)
+{
+	BSWriteLocker lock(&lockObject);
+	const auto ptr = cache.find(attributeId);
+	if (ptr == cache.end())
+		return AttributeType::Wrong;
+	return ptr->second->GetType();
 }
 
 bool Attributes::BuildCache(VMArray<ActorValueInfo*>& attributes, VMArray<bool>& flags)
@@ -81,6 +99,52 @@ bool Attributes::BuildCache(VMArray<ActorValueInfo*>& attributes, VMArray<bool>&
 	}
 	_MESSAGE("Cache built");
 	return true;
+}
+
+float GetValueCore(Actor* actor, const UInt32 attributeId)
+{
+	float retVal = 0;
+	bool found = false;
+	for (UInt32 i = 0; i < actor->actorValueData.count; i++)
+	{
+		if (attributeId == actor->actorValueData[i].avFormID)
+		{
+			retVal = actor->actorValueData[i].value;
+			found = true;
+			break;
+		}
+	}
+	if (!found)
+	{ // should almost never happens
+		ActorValueInfo* avi = DYNAMIC_CAST(LookupFormByID(attributeId), TESForm, ActorValueInfo);
+		return actor->actorValueOwner.GetValue(avi);
+	}
+
+	for (UInt64 i = 0; i < actor->unk350.count; i++)
+	{
+		if (attributeId == actor->unk350[i].avFormID)
+		{
+			retVal += actor->unk350[i].unk04 + actor->unk350[i].unk08 + actor->unk350[i].unk0C;
+			break;
+		}
+	}
+
+	return retVal;
+}
+
+std::vector<float> Attributes::GetValues(Actor* actor)
+{
+	std::vector<float> retVal;
+	if (!actor)
+		return retVal;
+	retVal.reserve(allAttributes.size());
+	BSWriteLocker lock(&actor->avLock);
+	for(const auto attributeId : allAttributes)
+	{
+		const float val = GetValueCore(actor, attributeId);
+		retVal.emplace_back(val);
+	}
+	return retVal;
 }
 SInt32 Attributes::GetIndex(UInt32 attributeId)
 {

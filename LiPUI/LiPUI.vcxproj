@@ -186,6 +186,7 @@
     <ClInclude Include="..\..\f4se\f4se\ScaleformValue.h" />
     <ClInclude Include="..\..\f4se\f4se_common\Relocation.h" />
     <ClInclude Include="..\..\f4se\f4se_common\Utilities.h" />
+    <ClInclude Include="..\AA\Change.hpp" />
     <ClInclude Include="Animations.hpp" />
     <ClInclude Include="Attributes.h" />
     <ClInclude Include="BonesHelper.hpp" />

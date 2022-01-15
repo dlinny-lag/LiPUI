@@ -55,31 +55,6 @@ namespace LiPUI
 		LiPUIMenu::SetWidgetPosition(PlayerActorId, x, y);
 		return true;
 	}
-	bool SetValues(StaticFunctionTag* _, Actor* actor, VMArray<float> values)
-	{
-		if (!actor)
-			return false;
-
-		const UInt32 len = values.Length();
-		const UInt32 expectedLength = Attributes::Length();
-		if (len != expectedLength)
-		{
-			_MESSAGE("SetValues: wrong values array with %d elements for Actor %08X. Expected %d", len, actor->formID, expectedLength);
-			return false;
-		}
-
-		LiPUIMenu::SetValues(actor->formID, ToArray(values));
-		return true;
-	}
-	bool ChangeValue(StaticFunctionTag* _, Actor* actor, ActorValueInfo* attribute, float newValue)
-	{
-		if (!actor)
-			return false;
-		if (!attribute)
-			return false;
-		LiPUIMenu::ChangeValue(actor->formID, attribute->formID, newValue);
-		return false;
-	}
 
 	void SetMaxDistance(StaticFunctionTag* _, UInt32 distance)
 	{
@@ -110,12 +85,5 @@ namespace LiPUI
 
 		vm->RegisterFunction(new NativeFunction1("SetMaxDistance", PluginAPIExport::EXPORT_PAPYRUS_SCRIPT, SetMaxDistance, vm));
 		vm->SetFunctionFlags(PluginAPIExport::EXPORT_PAPYRUS_SCRIPT, "SetMaxDistance", IFunction::kFunctionFlag_NoWait);
-
-		vm->RegisterFunction(new NativeFunction2("SetValues", PluginAPIExport::EXPORT_PAPYRUS_SCRIPT, SetValues, vm));
-		vm->SetFunctionFlags(PluginAPIExport::EXPORT_PAPYRUS_SCRIPT, "SetValues", IFunction::kFunctionFlag_NoWait);
-
-		vm->RegisterFunction(new NativeFunction3("ChangeValue", PluginAPIExport::EXPORT_PAPYRUS_SCRIPT, ChangeValue, vm));
-		vm->SetFunctionFlags(PluginAPIExport::EXPORT_PAPYRUS_SCRIPT, "ChangeValue", IFunction::kFunctionFlag_NoWait);
-
 	}
 }
