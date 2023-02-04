@@ -176,8 +176,6 @@ function EnsureSubscribed()
     LiP:UI.SetFontSize(FontSize)
     LiP:UI.SetMaxDistance(MaxDistance)
 
-    Actor[] actors = new Actor[1]
-    actors[0] = player
     DS:FormSet.Add(TrackedActors, player)
 
     StartTimer(0.1, showPlayerWidgetTimer)
@@ -304,17 +302,17 @@ bool Function LoadSettingFromMCM()
 endfunction
 
 AAF:AAF_API aafApi
-bool aafSubscribed
 function CheckAAF()
-    if aafApi && aafSubscribed
-        return
+    if aafApi
+        UnRegisterForCustomEvent(aafApi, "OnAnimationStart")
+        UnRegisterForCustomEvent(aafApi, "OnAnimationChange")
+        UnRegisterForCustomEvent(aafApi, "OnAnimationStop")
     endif
-    aafSubscribed = false
     if !aafApi 
         aafApi = Game.GetFormFromFile(0x00000F99, "AAF.esm") as AAF:AAF_API
     endif
-    aafSubscribed = aafApi
     RegisterForCustomEvent(aafApi, "OnAnimationStart")
+    RegisterForCustomEvent(aafApi, "OnAnimationChange")
     RegisterForCustomEvent(aafApi, "OnAnimationStop")
 endfunction
 
@@ -332,10 +330,12 @@ function ShowNPCWidget(Actor a)
     endif
 endfunction
 
-Event AAF:AAF_API.OnAnimationStart(AAF:AAF_API sender, var[] args)
+Function OnAnimation(var[] args)
     if AllowNPCWidgets && args[0] as int == 0
         Form[] actors = Utility.VarToVarArray(args[1]) as Form[]
-        DS:FormSet.AddRange(TrackedActors, actors)
+        if 0 == DS:FormSet.AddRange(TrackedActors, actors)
+            return ; widget displayed already for all of them
+        endif
         int i = 0
         while i < actors.Length
             Actor a = actors[i] as Actor
@@ -345,6 +345,13 @@ Event AAF:AAF_API.OnAnimationStart(AAF:AAF_API sender, var[] args)
             i += 1
         endwhile
     endif
+EndFunction
+
+Event AAF:AAF_API.OnAnimationStart(AAF:AAF_API sender, var[] args)
+    OnAnimation(args)
+Endevent
+Event AAF:AAF_API.OnAnimationChange(AAF:AAF_API sender, var[] args)
+    OnAnimation(args)
 Endevent
 
 function UntrackAllNPCs(Form[] actors)
