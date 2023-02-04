@@ -10,7 +10,8 @@ package
 	import flash.filters.BitmapFilterQuality;
     import flash.display.Loader;
 	import ActorWidget;
-	
+	import flash.system.System;
+
 	public class LiPUI extends MovieClip
 	{
 		public static const FontName:String = "$MAIN_Font"
@@ -184,6 +185,11 @@ package
 				return existing.height;
 			}
 			return -1;
+		}
+		
+		public function GetTotalMemory() : uint
+		{
+			return System.totalMemory;
 		}
 	}
 }

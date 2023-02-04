@@ -66,6 +66,7 @@ struct CreateWidgetRequest : WidgetRequest
 		if (result)
 		{
 			const bool retVal = ret.GetBool();
+			_MESSAGE("AddWidget for actor %08X returned %s ", ActorId, retVal?"true":"false");
 			if (retVal)
 			{
 				const WidgetState state{AutoPosition, Name};
@@ -104,14 +105,14 @@ struct RemoveWidgetRequest : WidgetRequest
 		if (result)
 		{
 			const bool retVal = ret.GetBool();
-			//_MESSAGE("RemoveWidget returned %s", retVal?"true":"false");
+			_MESSAGE("RemoveWidget for actor %08X returned %s ", ActorId, retVal?"true":"false");
 			if (retVal)
 			{
 				context->RegisteredWidgets.erase(ActorId);
 			}
 			return retVal;
 		}
-		_MESSAGE("Failed to call RemoveWidget");
+		_MESSAGE("Failed to call RemoveWidget for actor %08X", ActorId);
 		return false;
 	}
 };
@@ -186,7 +187,7 @@ struct ChangeValueRequest : WidgetRequest
 			{
 				//_MESSAGE("replacing %08X[%d]", actorId, attributeIndex);
 				changesToAnimate.erase(iter);
-				return;
+				break;
 			}
 			++iter;
 		}
@@ -237,6 +238,8 @@ struct ChangeValueRequest : WidgetRequest
 				ptr->second.Visible = true;  // same as in AS3
 				CreateOrReplaceAnimation(ActorId, index, 100, 5);
 			}
+			else
+				_MESSAGE("Failed to call SetActorValue for actor %08X", ActorId);
 			return true;
 		}
 		_MESSAGE("Failed to call SetActorValue");
@@ -462,6 +465,14 @@ void LiPUIMenu::OnFrame()
 		_MESSAGE("No movie?");
 		return;
 	}
+
+#ifdef SHOW_MEMORY
+	GFxValue totalMemory;
+	if (stage.Invoke("GetTotalMemory", &totalMemory, nullptr, 0))
+	{
+		_MESSAGE("mem:%u", totalMemory.data.u32);
+	}
+#endif
 	if (!Attributes::Ready())
 	{
 		_MESSAGE("Cache not ready");
@@ -746,7 +757,7 @@ inline void SetActorValueAnimationState(GFxValue& stage, UInt32 actorId, UInt32 
 	else
 	{
 		if (!ret.GetBool())
-			_MESSAGE("SetActorValueAnimationState returned false");
+			_MESSAGE("SetActorValueAnimationState returned false on actor %08X", actorId);
 	}
 }
 void LiPUIMenu::ProcessAnimations()
