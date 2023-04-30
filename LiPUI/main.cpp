@@ -43,23 +43,34 @@ void Serialization_Load(const F4SESerializationInterface* intfc)
 {
 }
 
+
+template <class T>
+void DispatchChangeMessage(T message)
+{
+	if (!message->Attribute)
+	{
+		_MESSAGE("None attribute");
+		return;
+	}
+	if (!message->Actor)
+	{
+		_MESSAGE("None actor");
+		return;
+	}
+	LiPUIMenu::ProcessChangeNotification(message->Actor->formID, message->Attribute->formID, message->PreviousValue, message->NewValue, message->Exceed);
+}
+
 void OnAttributeChanged(F4SEMessagingInterface::Message* msg)
 {
-	if (msg->type == Notifications::AttributeIncrementMessageType || msg->type == Notifications::AttributeDecrementMessageType)
+	if (msg->type == Notifications::AttributeIncrementMessageType1 || msg->type == Notifications::AttributeDecrementMessageType1)
 	{
-		ASSERT(sizeof(Notifications::Change) == msg->dataLen);
-		const Notifications::Change* change = static_cast<Notifications::Change*>(msg->data);
-		if (!change->Attribute)
-		{
-			_MESSAGE("None attribute");
-			return;
-		}
-		if (!change->Actor)
-		{
-			_MESSAGE("None actor");
-			return;
-		}
-		LiPUIMenu::ProcessChangeNotification(change->Actor->formID, change->Attribute->formID, change->PreviousValue, change->NewValue, change->Exceed);
+		if (const Notifications::Change1* change = Notifications::GetAsVersion1(msg))
+			DispatchChangeMessage(change);
+	}
+	else if(msg->type == Notifications::AttributeIncrementMessageType2 || msg->type == Notifications::AttributeDecrementMessageType2)
+	{
+		if (const Notifications::Change2* change = Notifications::GetAsVersion2(msg))
+			DispatchChangeMessage(change);
 	}
 	else
 		_MESSAGE("Invalid message type %d", msg->type);
