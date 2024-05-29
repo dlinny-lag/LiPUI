@@ -11,7 +11,16 @@
 #include "StringAPI.hpp"
 #include "AA/Change.hpp"
 
-#define REQUIRED_RUNTIME RUNTIME_VERSION_1_10_163
+#if F4SE_PRE_DECLARATIVE_LOAD
+	#define REQUIRED_RUNTIME RUNTIME_VERSION_1_10_163
+#endif
+#if _F4SE_DECLARATIVE_LOAD
+	#define REQUIRED_RUNTIME RUNTIME_VERSION_1_10_984
+#endif
+
+#ifndef REQUIRED_RUNTIME
+	#error Invalid project configuration
+#endif
 
 
 PluginHandle g_pluginHandle = kPluginHandle_Invalid;
@@ -102,31 +111,65 @@ void MessageCallback(F4SEMessagingInterface::Message* msg)
 	}
 }
 
+void InitLogs()
+{
+	gLog.OpenRelative(CSIDL_MYDOCUMENTS, "\\My Games\\Fallout4\\F4SE\\LiPUI.log");
+}
+
 
 extern "C"
 {
-	bool F4SEPlugin_Query(const F4SEInterface * f4se, PluginInfo * info)
+#if F4SE_PRE_DECLARATIVE_LOAD
+	__declspec(dllexport) bool F4SEPlugin_Query(const F4SEInterface * f4se, PluginInfo * info)
 	{
-		gLog.OpenRelative(CSIDL_MYDOCUMENTS, "\\My Games\\Fallout4\\F4SE\\LiPUI.log");
+		InitLogs();
 		// populate info structure
 		info->infoVersion = PluginInfo::kInfoVersion;
 		info->name = PluginAPIExport::pluginName;
 		info->version = PluginAPIExport::pluginVersionInt;
+		
+		_MESSAGE("F4SEPlugin_Query successful.");
+		return true;
+	}
+#endif
 
-		// store plugin handle so we can identify ourselves later
+#if _F4SE_DECLARATIVE_LOAD
+	__declspec(dllexport) F4SEPluginVersionData F4SEPlugin_Version =
+	{
+		F4SEPluginVersionData::kVersion,
+		
+		PluginAPIExport::pluginVersionInt,
+		"LiP UI",
+		"Dlinny_Lag",
+
+		F4SEPluginVersionData::kAddressIndependence_AddressLibrary_1_10_980,
+		F4SEPluginVersionData::kStructureIndependence_1_10_980Layout,
+		{ REQUIRED_RUNTIME, 0 },
+		0,
+		0,
+		0,
+		{0}
+	};
+
+#endif
+
+	__declspec(dllexport) bool F4SEPlugin_Load(const F4SEInterface * f4se)
+	{
+#if _F4SE_DECLARATIVE_LOAD
+		// logs was not initialized at F4SEPlugin_Query
+		InitLogs();
+#endif
 		g_pluginHandle = f4se->GetPluginHandle();
 
 		if(f4se->isEditor)
 		{
 			_ERROR("Editor is not supported");
-
 			return false;
 		}
 
 		if(f4se->runtimeVersion < REQUIRED_RUNTIME)
 		{
 			_ERROR("Unsupported runtime version %08X (expected %08X or higher)", f4se->runtimeVersion, REQUIRED_RUNTIME);
-
 			return false;
 		}
 
@@ -154,13 +197,6 @@ extern "C"
 		//	_ERROR("Failed to get F4SESerializationInterface");
 		//	return false;
 		//}
-		
-		_MESSAGE("F4SEPlugin_Query successful.");
-		return true;
-	}
-
-	bool F4SEPlugin_Load(const F4SEInterface * f4se)
-	{
 		//g_serialization->SetUniqueID(g_pluginHandle, PluginAPIExport::pluginUID);
 		//g_serialization->SetRevertCallback(g_pluginHandle, Serialization_Revert);
 		//g_serialization->SetSaveCallback(g_pluginHandle, Serialization_Save);
