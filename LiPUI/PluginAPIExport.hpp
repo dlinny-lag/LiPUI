@@ -11,8 +11,8 @@ namespace PluginAPIExport
 
 	const char* pluginName = "LiPUI";
 	const UInt32 pluginUID = 'LiPU';
-	const UInt32 pluginVersionInt = 0x0065;
-	const char* pluginVersionString = "0.6.5";
+	const UInt32 pluginVersionInt = 0x0066;
+	const char* pluginVersionString = "0.6.6";
 
 	BSFixedString GetVersionString(StaticFunctionTag* _)
 	{
