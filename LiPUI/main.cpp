@@ -71,12 +71,15 @@ void DispatchChangeMessage(T message)
 
 void OnAttributeChanged(F4SEMessagingInterface::Message* msg)
 {
+#ifndef _DEBUG
 	if (msg->type == Notifications::AttributeIncrementMessageType1 || msg->type == Notifications::AttributeDecrementMessageType1)
 	{
 		if (const Notifications::Change1* change = Notifications::GetAsVersion1(msg))
 			DispatchChangeMessage(change);
 	}
-	else if(msg->type == Notifications::AttributeIncrementMessageType2 || msg->type == Notifications::AttributeDecrementMessageType2)
+	else
+#endif
+	if(msg->type == Notifications::AttributeIncrementMessageType2 || msg->type == Notifications::AttributeDecrementMessageType2)
 	{
 		if (const Notifications::Change2* change = Notifications::GetAsVersion2(msg))
 			DispatchChangeMessage(change);
